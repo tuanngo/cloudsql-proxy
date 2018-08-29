@@ -1,0 +1,55 @@
+#!/bin/bash
+#######################################################
+# Google cloud sql proxy Installer
+# curl -sO https://raw.githubusercontent.com/tuanngo/cloudsql-proxy/master/install && bash install
+#######################################################
+
+script_root="https://raw.githubusercontent.com/tuanngo/cloudsql-proxy"
+
+if [ $(id -u) != "0" ]; then
+    printf "You need to be root to perform this command. Run \"sudo su\" to become root!\n"
+    exit
+fi
+
+if [ -f /etc/cloudsql/cloudsql.conf ]; then
+	echo "========================================================================="
+	echo "Server "
+	echo "========================================================================="
+exit
+fi
+rm -f install*
+
+
+CLOUDSQL_HOME=/opt/cloudsql
+
+echo "Downloading cloud_sql_proxy to $CLOUDSQL_HOME."
+mkdir -p $CLOUDSQL_HOME
+wget -O $CLOUDSQL_HOME/cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64
+chmod +x $CLOUDSQL_HOME/cloud_sql_proxy
+
+mkdir -p /etc/cloudsql/
+
+echo "Installing default config and init.d script for automatic startup."
+wget -q $script_root/init.d/cloudsql -O /etc/init.d/cloudsql
+
+if [ -f /etc/cloudsql/cloudsql.conf ]
+then
+  cp /etc/cloudsql/cloudsql.conf /etc/cloudsql/cloudsql.conf.dist
+  echo "Config file exists at /etc/cloudsql/cloudsql.conf."
+  echo "Copying new config to /etc/cloudsql/cloudsql.conf.dist"
+else
+  wget -q $script_root/config/psql-cloudsql.conf -O /etc/cloudsql/psql-cloudsql.conf
+fi
+
+update-rc.d cloudsql defaults
+
+
+echo <<EOD
+Google Cloud SQL Proxy installed in $CLOUDSQL_HOME.
+!!!! Be sure to update /etc/cloudsql/cloudsql.conf before running cloudsql!
+You can control Google Cloud SQL Proxy through the init.d service tool:
+START Cloud SQL:  service cloudsql start
+STOP Cloud SQL:   service cloudsql stop
+UNINSTALL Service:  service cloudsql uninstall
+Cloud SQL will log to /var/log/cloudsql.log
+EOD
