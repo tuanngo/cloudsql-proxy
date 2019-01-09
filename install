@@ -41,7 +41,9 @@ else
   wget -q $script_root/config/psql-cloudsql.conf -O /etc/cloudsql/psql-cloudsql.conf
 fi
 
-update-rc.d cloudsql defaults
+# update-rc.d cloudsql defaults
+systemctl enable cloudsql
+systemctl daemon-reload
 
 
 echo <<EOD
